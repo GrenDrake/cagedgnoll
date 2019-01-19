@@ -218,15 +218,47 @@ object chargen3
         asm
         choice $species thePlayer set_prop
 
-        "You are " say
-        $sex thePlayer get_prop 1 sayA call
-        " " say
-        $name $species thePlayer get_prop get_prop say
-        ". Beginning the game now.\n---\n" say
+        "Character" pageCharacter 0 add_page
+        "Inventory" pageInventory 0 add_page
+
         forestPath
     }
 ;
 
+
+// ////////////////////////////////////////////////////////////////////////////
+// Page handlers
+// ////////////////////////////////////////////////////////////////////////////
+
+function pageCharacter() {
+    asm
+
+    "You are " say
+    $sex thePlayer get_prop 1 sayA call
+    " " say
+    $name $species thePlayer get_prop get_prop say
+    "." say
+
+    continueStr pageDone add_option
+    pageDispatch get_option
+}
+
+function pageInventory() {
+    asm
+    continueStr pageDone add_option
+    pageDispatch get_option
+}
+
+function pageDispatch(event extra : result) {
+    asm
+
+    extra 1 event call
+    result store
+}
+
+function pageDone() {
+    asm end_page
+}
 
 // ////////////////////////////////////////////////////////////////////////////
 // General item definitions
