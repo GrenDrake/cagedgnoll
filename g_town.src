@@ -129,11 +129,6 @@ object inTown
     }
 ;
 
-function pronoun(who thePronoun) {
-    asm
-    thePronoun $pronouns $sex who get_prop get_prop get_item say
-}
-
 object townStrengthTester
     //  The purpose of this scene is to demonstrate making out-of-combat skill
     //  checks
@@ -145,7 +140,7 @@ object townStrengthTester
         thePlayer actor store // 0 party-at stk-dup say-uf
         $name actor get_prop say_uf
         " picks up the hammer sitting next to the strength testing machine and slams it down on the target as hard " say
-        proSubject actor 2 pronoun call
+        proSubject actor 2 sayPronoun call
         " can! " say
         -2 skillMelee thePlayer 3 skillCheck call
         failed jz

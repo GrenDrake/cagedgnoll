@@ -6,31 +6,31 @@
 // Constant definitions
 // ////////////////////////////////////////////////////////////////////////////
 
-value proSubject    0;
-value proObject     1;
-value proPos        2;
-value proAdject     3;
-value proReflex     4;
+value proSubject    0
+value proObject     1
+value proPos        2
+value proAdject     3
+value proReflex     4
 
-value skillMelee    0;
-value skillRanged   1;
-value skillMagic    2;
+value skillMelee    0
+value skillRanged   1
+value skillMagic    2
 
-value dtBlunt       "blunt";
-value dtCutting     "cutting";
-value dtPiercing    "piercing";
-value dtFire        "fire";
-value dtAir         "air";
-value dtEarth       "earth";
-value dtWater       "water";
+value dtBlunt       "blunt"
+value dtCutting     "cutting"
+value dtPiercing    "piercing"
+value dtFire        "fire"
+value dtAir         "air"
+value dtEarth       "earth"
+value dtWater       "water"
 
 // ////////////////////////////////////////////////////////////////////////////
 // Common strings
 // ////////////////////////////////////////////////////////////////////////////
 
-value hoursPerDay       1440;
-value minutesPerHour    60;
-value continueStr       "Continue";
+value hoursPerDay       1440
+value minutesPerHour    60
+value continueStr       "Continue"
 
 object sexNeuter
     article             "a "
@@ -67,6 +67,7 @@ object thePlayer
     sex                 sexNeuter
     species             speciesHuman
     faction             0
+    inventory           []
     skills {
         skillMelee:     10
         skillRanged:    12
@@ -136,10 +137,25 @@ function main() {
     start 1 dispatch call
 }
 
-function printObj(theObject) {
+
+function sayA(theObject upperFirst) {
     asm
     $article theObject get_prop say
     $name theObject get_prop say
+}
+function sayThe(theObject upperFirst) {
+    asm
+    "the " say
+    $name theObject get_prop say
+}
+function sayName(theObject upperFirst) {
+    asm
+    $name theObject get_prop say
+}
+function sayPronoun(who thePronoun upperFirst) {
+    asm
+    thePronoun $pronouns $sex who get_prop get_prop get_item
+    upperFirst asUpper jnz say return asUpper: say_uf
 }
 
 function skillCheck(who skill modifier) {
@@ -203,10 +219,10 @@ object chargen3
         choice $species thePlayer set_prop
 
         "You are " say
-        $sex thePlayer get_prop 1 printObj call
+        $sex thePlayer get_prop 1 sayA call
         " " say
         $name $species thePlayer get_prop get_prop say
-        ". Beginning the game now.\n[b]----------------------------------------[/b]\n" say
+        ". Beginning the game now.\n---\n" say
         forestPath
     }
 ;
