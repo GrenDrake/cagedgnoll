@@ -67,7 +67,7 @@ object thePlayer
     sex                 sexNeuter
     species             speciesHuman
     faction             0
-    inventory           []
+    inventory           {}
     skills {
         skillMelee:     10
         skillRanged:    12
@@ -183,6 +183,41 @@ function skillCheck(who skill modifier) {
 
 
 // ////////////////////////////////////////////////////////////////////////////
+// Inventory functions
+// ////////////////////////////////////////////////////////////////////////////
+
+function addItems(item qty : invMap) {
+    asm
+
+    $inventory thePlayer get_prop invMap store
+    item invMap has_item alreadyHas jnz
+    qty item invMap set_item
+    1 return
+
+    alreadyHas:
+    item invMap get_item qty add item invMap set_item
+    1 return
+}
+
+function removeItems(item qty : invMap) {
+    asm
+
+    item 1 itemQty call stack_dup qty cmp notEnough jlt
+    $inventory thePlayer get_prop invMap store
+    qty sub item invMap set_item 1 return
+    notEnough: 0 return
+}
+
+function itemQty(item : invMap) {
+    asm
+
+    $inventory thePlayer get_prop invMap store
+    item invMap get_item return
+}
+
+
+
+// ////////////////////////////////////////////////////////////////////////////
 // Startup and chargen
 // ////////////////////////////////////////////////////////////////////////////
 
@@ -218,8 +253,11 @@ object chargen3
         asm
         choice $species thePlayer set_prop
 
-        "Character" pageCharacter 0 add_page
-        "Inventory" pageInventory 0 add_page
+        50 gold 2 addItems call
+        1 loincloth 2 addItems call
+
+        "Character" pageCharacter 99 add_page
+        "Inventory" pageInventory 105 add_page
 
         forestPath
     }
@@ -243,8 +281,26 @@ function pageCharacter() {
     pageDispatch get_option
 }
 
-function pageInventory() {
+function pageInventory(: list keys itemCount counter) {
     asm
+
+    $inventory thePlayer get_prop list store
+    list get_keys keys store
+    keys get_size itemCount store
+    0 counter store
+    loopStart:
+    counter itemCount cmp done jgte
+    counter 1 add say
+    ") " say
+    counter keys get_item 1 sayName call
+    " (x" say
+    counter keys get_item list get_item say
+    ")[br]" say
+    counter 1 add counter store
+    loopStart jmp
+
+    done:
+
     continueStr pageDone add_option
     pageDispatch get_option
 }
