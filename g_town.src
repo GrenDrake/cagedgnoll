@@ -246,43 +246,49 @@ object townBlacksmithAboutTown
 
 object townBlacksmithStore
     saleList [
-//        common-sword
-//        common-helmet
-//        plate-armour
+       commonSword
+       commonHelmet
+       plateArmour
     ]
-    body asm_function() {
-        "\"What would you like?\"\n" say
+    body function(: storeList listSize item index optText) {
+        ("\"What would you like?\"\n")
 
-//        _9 town-blacksmith-store $sale-list get-property list-size store
-                        // the number of items for sale
-//        _8 0 store      // current list position
+        (store storeList (get_prop townBlacksmithStore $saleList))
+        (store listSize (get_size storeList))
+        (store index 0)
+        (while (lt index listSize)
+            (proc
+                (store item (get_item storeList index))
+                (say_uf (get_prop item $name))
+                (" is " (get_prop item $price) " gold pieces[br]")
+                (if (lte (get_prop item $price) (itemQty gold))
+                    (proc
+                        (store optText (new String))
+                        (strcpy optText "Buy ")
+                        (strcat optText (get_prop item $name))
+                        (add_option_x item townBlacksmithBuy optText)))
+                (store index (add index 1))))
 
-//        LABEL list-start
-//        *_8 *_9 list-done jump-gte
+        (store index (itemQty gold))
+        (if (lte index 0) ("\nYou are current broke."))
+        (if (eq index 1)
+            ("\nYou have a single gold piece.")
+            ("\nYou have " (itemQty gold) " gold pieces."))
 
-//        _7 town-blacksmith-store $sale-list get-property *_8 list-get store
-//        *_7 say-uf
-//        >" is "
-//        *_7 $price get-property say-number
-//        >" gold pieces\n"
-
-//        gold item-qty *_7 $price get-property cant-afford jump-lt
-//        *_7 $name get-property town-blacksmith-buy *_7 add-option-xtra
-//        LABEL cant-afford
-
-        // go to next item
-//        _8 *_8 increment store
-//        list-start jump
-
-//        LABEL list-done
-
-        "Buy nothing" $location world get_prop add_option
+        (add_option (get_prop world $location) "Buy nothing")
     }
 ;
 
 object townBlacksmithBuy
-    body asm_function() {
-        continueStr townBlacksmithStore add_option
+    body function(item) {
+        (add_option townBlacksmithStore continueStr)
+        (if (removeItems gold (get_prop item $price))
+            (proc
+                (addItems item 1)
+                ("You buy ")
+                (sayA item)
+                ("."))
+            ("You can't afford that!"))
 //        gold *_0 $price get-property remove-items
 //        cant-afford jump-false
 
