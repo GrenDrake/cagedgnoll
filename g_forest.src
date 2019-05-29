@@ -22,7 +22,7 @@ object imp1
     species             speciesHuman
     faction             1
     $defeated           0
-    ai function() {
+    ai asm_function() {
         // 1-in-3 chance of performing a whirlwind attack
 //        0 2 random do-whirl jump-false
 
@@ -45,7 +45,7 @@ object imp2
 //    skills map(
 //        skl-melee 4;
 //    );
-    ai function() {
+    ai asm_function() {
 //        *_0 1 imp1 $ai getproperty call
     }
 ;
@@ -56,7 +56,7 @@ object imp3
     sex                 sexFemale
     species             speciesHuman
     faction             1
-    ai function() {
+    ai asm_function() {
 //        *_0 1 imp-1 $ai get-property call
     }
 ;
@@ -69,7 +69,7 @@ object enemyEkeleton
     faction             1
 //    skills map(
 //    );
-    ai function() {
+    ai asm_function() {
 //        *_0 $faction get-property random-not-faction
 //        *_0 2 act-thrust $combat-node get-property call
 //        end
@@ -83,8 +83,7 @@ object enemyEkeleton
 
 object forestPath
     location "On Forest Path"
-    body function() {
-        asm
+    body asm_function() {
         "You are on a path leading through a forest. The crumbling remains of a stone wall can be seen on one side, the words \"TOWN\" and a southward arrow has been painted on the wall. The wall partially hides an overgrown side trail." say
         "Go north into the forest" forestFork  add_option
         "Go south to town"         townGate    add_option
@@ -95,8 +94,7 @@ object forestPath
 
 object townGate
     location "Outside the Town Gates"
-    body function() {
-        asm
+    body asm_function() {
         "You stand before a gate built into the large, wooden pallisade that surronds the town. The gate is open, ready to admit you to the market bzzaar within." say
         "Head into town" inTown add_option
         "Return to the forest" forestPath add_option
@@ -105,8 +103,7 @@ object townGate
 
 object gnollCage
     location "By a Cage in the Forest"
-    body function() {
-        asm
+    body asm_function() {
         "You stand in a clearing in the forest. The area is dominated by a large, if rusty, cage." say
         "Return to the forest path" forestPath add_option
 
@@ -122,8 +119,7 @@ object gnollCage
 ;
 
 object talkToCagedGnoll
-    body function() {
-        asm
+    body asm_function() {
         0 addContinue call
 
         $talkedToInCage theGnoll get_prop nottalked jz
@@ -137,8 +133,7 @@ object talkToCagedGnoll
 ;
 
 object openCage
-    body function() {
-        asm
+    body asm_function() {
         0 addContinue call
 
         $defeated imp1 get_prop nokey jz
@@ -155,8 +150,7 @@ object openCage
 
 object forestFork
     location "A Fork in the Path"
-    body function() {
-        asm
+    body asm_function() {
         "The forest path branches here. One fork leads northward, a faded sign labelling it as \"GNOLL HOME\". A northeast fork deeper into the forest, suitable for exploring what hides in the forest's shadowed reaches. To the south, the path leads back towards town. A western trail loop arounds to a discreet clearing hidden by dense brush." say
 
         "Take the north path"           outsideCabin       add_option
@@ -168,8 +162,7 @@ object forestFork
 
 object outsideCabin
     location "A Cabin in the Forest"
-    body function() {
-        asm
+    body asm_function() {
         "A small cabin has been built here, nestled between the trees." say
 
         $rescued theGnoll get_prop nognoll jnz
@@ -187,9 +180,7 @@ object outsideCabin
 
 object discreetClearing
     location "A Discreet Clearing"
-    body function() {
-        asm
-
+    body asm_function() {
         $defeated imp1 get_prop impsdone jnz
         "Three imps are gathered around a campfire, cackling and conversing. As you enter the clearing, they look up at you.\n\"An intruder! Get him!\"" say
         "\n[rng: " say 2 0 random stack_dup say "] " say
@@ -214,8 +205,7 @@ object discreetClearing
 ;
 
 object mainImpFightAfter
-    body function() {
-        asm
+    body asm_function() {
 //        combat-status 0 player-defeat jump-lt
 
         // VICTORY
@@ -239,8 +229,7 @@ object mainImpFightAfter
 // ////////////////////////////////////////////////////////////////////////////
 
 object enteringCabin
-    body function() {
-        asm
+    body asm_function() {
         $rescued theGnoll get_prop gnollhome jnz
 
         "Try as you might, the door is quite secure." say
@@ -256,8 +245,7 @@ object enteringCabin
 
 object insideCabin
     location "Inside the Gnoll's Cabin"
-    body function() {
-        asm
+    body asm_function() {
         "The interior of the cabin is crampt, but cozy. You can see the gnoll slotched back on a wooden chair, a mug of some dark liquid in his hand.\n\n\"Good to see you again, my rescuer!\" he says as you enter." say
         "Talk to the gnoll" gnollCabinTalk     add_option
         "Leave"             outsideCabin       add_option
@@ -265,8 +253,7 @@ object insideCabin
 ;
 
 object gnollCabinTalk
-    body function() {
-        asm
+    body asm_function() {
         "You have a nice chat with the gnoll." say
         0 addContinue call
     }
@@ -282,15 +269,14 @@ object forestEvent
         forestEventSkeleton
         forestEventNothing
     ]
-    body function() {
-        asm $events self get_prop get_random
+    body asm_function() {
+        $events self get_prop get_random
     }
 ;
 
 object forestEventSkeleton
     //count { 1 }
-    body function() {
-        asm
+    body asm_function() {
         "You discover a menacing looking skeleton loitering around a grave. It stares at you with empty eye-sockets for a moment then charges with a soundless cry." say
         "\nThen vanishes as combat isn't implemented." say forestEventSkeletonAfter
 //        forest-event-skeleton-after reset-combat
@@ -298,8 +284,7 @@ object forestEventSkeleton
     }
 ;
 object forestEventSkeletonAfter
-    body function() {
-        asm
+    body asm_function() {
         0 addContinue call
 //        combat-status 0 playerdefeat jump-lt
 
@@ -320,8 +305,7 @@ object forestEventSkeletonAfter
 
 object forestEventNothing
     //count { 1 }
-    body function() {
-        asm
+    body asm_function() {
         "You stumble around in the forest for a while, but eventually end up back were you started without finding anything." say
         0 addContinue call
     }

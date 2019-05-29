@@ -6,31 +6,31 @@
 // Constant definitions
 // ////////////////////////////////////////////////////////////////////////////
 
-value proSubject    0
-value proObject     1
-value proPos        2
-value proAdject     3
-value proReflex     4
+declare proSubject    0
+declare proObject     1
+declare proPos        2
+declare proAdject     3
+declare proReflex     4
 
-value skillMelee    0
-value skillRanged   1
-value skillMagic    2
+declare skillMelee    0
+declare skillRanged   1
+declare skillMagic    2
 
-value dtBlunt       "blunt"
-value dtCutting     "cutting"
-value dtPiercing    "piercing"
-value dtFire        "fire"
-value dtAir         "air"
-value dtEarth       "earth"
-value dtWater       "water"
+declare dtBlunt       "blunt"
+declare dtCutting     "cutting"
+declare dtPiercing    "piercing"
+declare dtFire        "fire"
+declare dtAir         "air"
+declare dtEarth       "earth"
+declare dtWater       "water"
 
 // ////////////////////////////////////////////////////////////////////////////
 // Common strings
 // ////////////////////////////////////////////////////////////////////////////
 
-value hoursPerDay       1440
-value minutesPerHour    60
-value continueStr       "Continue"
+declare hoursPerDay       1440
+declare minutesPerHour    60
+declare continueStr       "Continue"
 
 object sexNeuter
     article             "a "
@@ -88,97 +88,80 @@ object world
 // Utility functions
 // ////////////////////////////////////////////////////////////////////////////
 
-function addContinue() {
-    asm
+asm_function addContinue() {
     continueStr $location world get_prop add_option
 }
 
 function dispatch(event extra : result) {
-    asm
+    (if (neq (typeof event) Object)
+        (store event (get_prop world $location)))
+    (while 1
+        (proc
+            (store result ((get_prop event $body) extra))
+            (if (neq (typeof result) Object) (break))
+            (store event result)
+            (store extra 0)))
 
-    runevent:
-    extra 1 $body event call_method
-    result store
-    result typeof Object cmp doneevent jnz
-    result event store
-    0 extra store
-    runevent jmp
+    (set_prop world $inLocation false)
+    (set_prop world $newLocation false)
 
-    doneevent:
+    (store result (get_prop event $location))
+    (if (neq result 0)
+        (proc
+            (set_prop world $inLocation true)
+            (if (neq event (get_prop world $location))
+                (proc
+                    (set_prop world $newLocation true)
+                    (set_prop world $location event)
+                    (set_prop world $locationName result)
+                    (set_setting infobarLeft result)))))
 
-    0 $inLocation world set_prop
-    0 $newLocation world set_prop
-
-    $location event get_prop result store
-    result 0 cmp endlocation jz
-    1 $inLocation world set_prop
-    $location world get_prop event cmp isnewlocation jnz
-    endlocation jmp
-
-    isnewlocation:
-    1 $newLocation world set_prop
-    event $location world set_prop
-    result $locationName world set_prop
-    result InfobarLeft set_info
-
-
-
-    endlocation:
 //    "\nIN LOCATION: " say $inLocation world get_prop say
 //    "\nNEW LOCATION: " say $newLocation world get_prop say
 //    "\nLOCATION NAME: " say $locationName world get_prop say
-    dispatch get_option
+    (get_option dispatch)
 }
 
-function main() {
-    asm
-
-    "Caged Gnoll" InfobarTitle set_info
+asm_function main() {
+    "Caged Gnoll" infobarTitle set_setting
     start 1 dispatch call
 }
 
 
-function sayA(theObject upperFirst) {
-    asm
+asm_function sayA(theObject upperFirst) {
     $article theObject get_prop say
     $name theObject get_prop say
 }
-function sayThe(theObject upperFirst) {
-    asm
+asm_function sayThe(theObject upperFirst) {
     "the " say
     $name theObject get_prop say
 }
-function sayName(theObject upperFirst) {
-    asm
+asm_function sayName(theObject upperFirst) {
     $name theObject get_prop say
 }
-function sayPronoun(who thePronoun upperFirst) {
-    asm
+asm_function sayPronoun(who thePronoun upperFirst) {
     thePronoun $pronouns $sex who get_prop get_prop get_item
     upperFirst asUpper jnz say return asUpper: say_uf
 }
 
-function skillCheck(who skill modifier) {
-    asm
-    modifier typeof None cmp hasmod jnz
-    0 modifier store
-    hasmod:
-    skill $skills who get_prop get_item
-    "[(" say stack_dup say "+" say modifier say ")=" say
-    modifier add stack_dup say
-    " vs (" say
+function skillCheck(who skill modifier : roll total) {
+    (if (eq (typeof modifier) None)
+        (store modifier 0))
+    (store skill (get_item (get_prop who $skills) skill))
+    ("[(" skill "+" modifier ")=" (add skill modifier) " vs (")
 
-    1 7 random stack_dup say "+" say
-    1 7 random stack_dup say "+" say add
-    1 7 random stack_dup say ")=" say add
-    stack_dup say
+    (store roll (random 1 7))   (print roll "+")    (store total roll)
+    (store roll (random 1 7))   (print roll "+")    (store total (add total roll))
+    (store roll (random 1 7))   (print roll ")=")   (store total (add total roll))
+    (print total)
 
-    cmp success jgte
-    " = fail]" say
-    0 return
-
-    success:
-    1 " = success]" say
+    (if (gte (add skill modifier) total)
+        (proc
+            (" = success]")
+            (return 1))
+        (proc
+            (" = fail]"
+            (return 0))))
 }
 
 
@@ -186,10 +169,8 @@ function skillCheck(who skill modifier) {
 // Inventory functions
 // ////////////////////////////////////////////////////////////////////////////
 
-function addItems(item qty : invMap) {
-    asm
-
-    $inventory thePlayer get_prop invMap store
+asm_function addItems(item qty : invMap) {
+    $inventory thePlayer get_prop *invMap store
     item invMap has_item alreadyHas jnz
     qty item invMap set_item
     1 return
@@ -199,19 +180,15 @@ function addItems(item qty : invMap) {
     1 return
 }
 
-function removeItems(item qty : invMap) {
-    asm
-
-    item 1 itemQty call stack_dup qty cmp notEnough jlt
-    $inventory thePlayer get_prop invMap store
+asm_function removeItems(item qty : invMap) {
+    item 1 itemQty call stack_dup qty lt notEnough jnz
+    $inventory thePlayer get_prop *invMap store
     qty sub item invMap set_item 1 return
     notEnough: 0 return
 }
 
-function itemQty(item : invMap) {
-    asm
-
-    $inventory thePlayer get_prop invMap store
+asm_function itemQty(item : invMap) {
+    $inventory thePlayer get_prop *invMap store
     item invMap get_item return
 }
 
@@ -222,24 +199,21 @@ function itemQty(item : invMap) {
 // ////////////////////////////////////////////////////////////////////////////
 
 object start
-    body function() {
-        asm
+    body asm_function() {
         "Welcome to game!\nYou can select options by clicking on them or (for options up to ten) by pressing the appropriate number key." say
         "Start game" chargen1 add_option
     }
 ;
 
 object chargen1
-    body function() {
-        asm
+    body asm_function() {
         "What sex are you?" say
         "Male"   chargen2   sexMale    add_option_x
         "Female" chargen2   sexFemale  add_option_x
     }
 ;
 object chargen2
-    body function(choice) {
-        asm
+    body asm_function(choice) {
         choice $sex thePlayer set_prop
 
         "What species are you?" say
@@ -249,8 +223,7 @@ object chargen2
     }
 ;
 object chargen3
-    body function(choice) {
-        asm
+    body asm_function(choice) {
         choice $species thePlayer set_prop
 
         50 gold 2 addItems call
@@ -268,9 +241,7 @@ object chargen3
 // Page handlers
 // ////////////////////////////////////////////////////////////////////////////
 
-function pageCharacter() {
-    asm
-
+asm_function pageCharacter() {
     "You are " say
     $sex thePlayer get_prop 1 sayA call
     " " say
@@ -281,22 +252,20 @@ function pageCharacter() {
     pageDispatch get_option
 }
 
-function pageInventory(: list keys itemCount counter) {
-    asm
-
-    $inventory thePlayer get_prop list store
-    list get_keys keys store
-    keys get_size itemCount store
-    0 counter store
+asm_function pageInventory(: list keys itemCount counter) {
+    $inventory thePlayer get_prop *list store
+    list get_keys *keys store
+    keys get_size *itemCount store
+    0 *counter store
     loopStart:
-    counter itemCount cmp done jgte
+    counter itemCount gte done jnz
     counter 1 add say
     ") " say
     counter keys get_item 1 sayName call
     " (x" say
     counter keys get_item list get_item say
     ")[br]" say
-    counter 1 add counter store
+    counter 1 add *counter store
     loopStart jmp
 
     done:
@@ -305,15 +274,13 @@ function pageInventory(: list keys itemCount counter) {
     pageDispatch get_option
 }
 
-function pageDispatch(event extra : result) {
-    asm
-
+asm_function pageDispatch(event extra : result) {
     extra 1 event call
-    result store
+    *result store
 }
 
-function pageDone() {
-    asm end_page
+asm_function pageDone() {
+    end_page
 }
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -340,8 +307,7 @@ object loincloth
 // ////////////////////////////////////////////////////////////////////////////
 
 object restAwhile
-    body function() {
-        asm
+    body asm_function() {
         "How long would you like to rest for?" say
         "One hour"      restAwhileDoit    60  add_option_x
         "Six hours"     restAwhileDoit    360 add_option_x
@@ -351,8 +317,7 @@ object restAwhile
 ;
 
 object restAwhileDoit
-    body function(length) {
-        asm
+    body asm_function(length) {
         "You rest for a while. " say
 //        length do_rest
         0 addContinue call

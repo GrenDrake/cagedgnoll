@@ -12,8 +12,8 @@ object teleportCrystal
     name    "teleport crystal"
     plural  "teleport crystals"
     description "A crystal devised by Arnold of Va-Katr for the purpose of reaching the town quickly without the use of undue magic."
-    onUse function() {
-        asm
+    onUse asm_function() {
+
 //        teleportCrystal 1 remove-items
 //        "Light flashes and you vision goes blank. Moments later, the world returns."
 //        say
@@ -28,8 +28,8 @@ object gnollPotion
     name    "potion of gnoll"
     plural  "potions of gnoll"
     description "A potion of transformation intended to make one more gnoll-like."
-    onUse function() {
-        asm
+    onUse asm_function() {
+
 //        gnoll-potion 1 remove-items
 //        add-return
 //        the-player get-species
@@ -50,8 +50,8 @@ object humanPotion
     name    "potion of humanity"
     plural  "potions of humanity"
     description "A potion of transformation intended to make one more human-like."
-    onUse function() {
-        asm
+    onUse asm_function() {
+
 //        human-potion 1 remove-items
 //        add-return
 //        the-player get-species
@@ -73,8 +73,8 @@ object commonSword
     plural  "common swords"
     description "A perfectly ordinary sword."
     slot    "weapon"
-    canEquip function() {
-        asm 1
+    canEquip asm_function() {
+         1
     }
     actionList [
 //        act-swing
@@ -119,8 +119,7 @@ object plateArmour
 
 object inTown
     location "In Town"
-    body function() {
-        asm
+    body asm_function() {
         "You are inside the bazaar of the town; colourful stalls surround you and the sound of voices fills the air. The gate out of town is to the north while several stalls may be of interest. Particularly, there is a large tent with a sign reading \"Al the Alchemist Extraordinaire!\". Across the way from that is a strength-testing machine. Slightly further away, a blacksmith has set up their forge." say
         "Visit alchemist's tent"    townAlchemist          add_option
         "Visit the blacksmith"      townBlacksmith         add_option
@@ -133,22 +132,15 @@ object townStrengthTester
     //  The purpose of this scene is to demonstrate making out-of-combat skill
     //  checks
     body function(: actor) {
-        asm
-
-        0 addContinue call
-
-        thePlayer actor store // 0 party-at stk-dup say-uf
-        $name actor get_prop say_uf
-        " picks up the hammer sitting next to the strength testing machine and slams it down on the target as hard " say
-        proSubject actor 2 sayPronoun call
-        " can! " say
-        -2 skillMelee thePlayer 3 skillCheck call
-        failed jz
-
-        "\nThe indicator shoots up, hitting the bell and making it ring loudly!" say
-        return
-        failed:
-        "\nThe indicator shoots up, but falls again before it reaches the bell." say
+        (addContinue)
+        (store actor thePlayer)
+        (say_uf (get_prop actor $name))
+        (" picks up the hammer sitting next to the strength testing machine and slams it down on the target as hard ")
+        (sayPronoun actor proSubject)
+        (" can! ")
+        (if (skillCheck actor skillMelee -2)
+            ("\nThe indicator shoots up, hitting the bell and making it ring loudly!")
+            ("\nThe indicator shoots up, but falls again before it reaches the bell."))
     }
 ;
 
@@ -160,8 +152,7 @@ object townAlchemist
     //  Al the Alchemical Extraordinaire is an example of a very basic shop; Al
     //  offers no services beyond selling a few basic items.
     location "Al the Alchemist Extraordinaire's Tent"
-    body function() {
-        asm
+    body asm_function() {
         "You stand in an elaborately decorated tent with all manner of alchemical decor, such as bubbling flasks and vials of strangely coloured liquids, swatches of brightly coloured cloth, and cases of books with incomprehensible titles. An older man with an erect bearing beams at you from beside a counter." say
         "Buy something" townAlchemistTalk add_option
         "Leave the tent" inTown add_option
@@ -174,8 +165,7 @@ object townAlchemistTalk
 //        gnollPotion
 //        humanPotion
     ]
-    body function() {
-        asm
+    body asm_function() {
         "\"Hello!\" he says. \"Would you like to buy something?\"\n" say
 
 //        _9 townAlchemistTalk $saleList get_property list-size store
@@ -206,8 +196,7 @@ object townAlchemistTalk
 ;
 
 object townAlchemistBuy
-    body function() {
-        asm
+    body asm_function() {
         continueStr townAlchemistTalk add_option
 //        gold *_0 $price get-property remove-items
 //        cant-afford jump-false
@@ -232,8 +221,7 @@ object townBlacksmith
     //  a variety of goods that the player will want. In addition, the player
     //  can engage the blacksmith in conversation on a variety of topics.
     location "The Town Blacksmith"
-    body function() {
-        asm
+    body asm_function() {
         "The blacksmith is located in a simple, but well built and maintained forge. The blacksmith, a large, heavily muscled human, works tirelessly." say
         "Buy something" townBlacksmithStore add_option
         "Talk to the blacksmith" townBlacksmithTalk add_option
@@ -242,8 +230,7 @@ object townBlacksmith
 ;
 
 object townBlacksmithTalk
-    body function() {
-        asm
+    body asm_function() {
         "\"Welcome, " say $name $species thePlayer get_prop get_prop say "! How may I help you?\"" say
         "Ask about the town" townBlacksmithAboutTown add_option
         "Finish talking" $location world get_prop add_option
@@ -251,8 +238,7 @@ object townBlacksmithTalk
 ;
 
 object townBlacksmithAboutTown
-    body function() {
-        asm
+    body asm_function() {
         "You ask the blacksmith about the town.\n\"I admit, it's not large, but it's what you can find here that counts and you won't find any town with as many shops at this one anywhere in this world!\"" say
         continueStr townBlacksmithTalk add_option
     }
@@ -264,8 +250,7 @@ object townBlacksmithStore
 //        common-helmet
 //        plate-armour
     ]
-    body function() {
-        asm
+    body asm_function() {
         "\"What would you like?\"\n" say
 
 //        _9 town-blacksmith-store $sale-list get-property list-size store
@@ -296,8 +281,7 @@ object townBlacksmithStore
 ;
 
 object townBlacksmithBuy
-    body function() {
-        asm
+    body asm_function() {
         continueStr townBlacksmithStore add_option
 //        gold *_0 $price get-property remove-items
 //        cant-afford jump-false
