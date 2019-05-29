@@ -161,56 +161,15 @@ object townAlchemist
 
 object townAlchemistTalk
     saleList [
-//        teleportCrystal
-//        gnollPotion
-//        humanPotion
+       teleportCrystal
+       gnollPotion
+       humanPotion
     ]
-    body asm_function() {
-        "\"Hello!\" he says. \"Would you like to buy something?\"\n" say
-
-//        _9 townAlchemistTalk $saleList get_property list-size store
-                        // the number of items for sale
-//        _8 0 store      // current list position
-
-//        LABEL list-start
-//        *_8 *_9 list-done jump-gte
-
-//        _7 town-alchemist-talk $sale-list get-property *_8 list-get store
-//        *_7 say-uf
-//        >" is "
-//        *_7 $price get-property say-number
-//        >" gold pieces\n"
-
-//        gold item-qty *_7 $price get-property cant-afford jump-lt
-//        *_7 $name get-property town-alchemist-buy *_7 add-option-xtra
-//        LABEL cant-afford
-
-        // go to next item
-//        _8 *_8 increment store
-//        list-start jump
-
-//        LABEL list-done
-
-        "Buy nothing" $location world get_prop add_option
+    body function() {
+        (doStoreList self "\"Hello!\" he says. \"Would you like to buy something?\"\n")
     }
 ;
 
-object townAlchemistBuy
-    body asm_function() {
-        continueStr townAlchemistTalk add_option
-//        gold *_0 $price get-property remove-items
-//        cant-afford jump-false
-
-//        *_0 1 add-items
-//        >"You buy "
-//        *_0 say
-//        >"."
-//        end
-
-//        LABEL cant-afford
-//        >"You can't afford that!"
-    }
-;
 
 // ////////////////////////////////////////////////////////////////////////////
 // The Blacksmith
@@ -251,54 +210,6 @@ object townBlacksmithStore
        plateArmour
     ]
     body function(: storeList listSize item index optText) {
-        ("\"What would you like?\"\n")
-
-        (store storeList (get_prop townBlacksmithStore $saleList))
-        (store listSize (get_size storeList))
-        (store index 0)
-        (while (lt index listSize)
-            (proc
-                (store item (get_item storeList index))
-                (say_uf (get_prop item $name))
-                (" is " (get_prop item $price) " gold pieces[br]")
-                (if (lte (get_prop item $price) (itemQty gold))
-                    (proc
-                        (store optText (new String))
-                        (strcpy optText "Buy ")
-                        (strcat optText (get_prop item $name))
-                        (add_option_x item townBlacksmithBuy optText)))
-                (store index (add index 1))))
-
-        (store index (itemQty gold))
-        (if (lte index 0) ("\nYou are currently broke.")
-            (if (eq index 1)
-                ("\nYou have a single gold piece.")
-                ("\nYou have " (itemQty gold) " gold pieces.")))
-
-        (add_option (get_prop world $location) "Buy nothing")
-    }
-;
-
-object townBlacksmithBuy
-    body function(item) {
-        (add_option townBlacksmithStore continueStr)
-        (if (removeItems gold (get_prop item $price))
-            (proc
-                (addItems item 1)
-                ("You buy ")
-                (sayA item)
-                ("."))
-            ("You can't afford that!"))
-//        gold *_0 $price get-property remove-items
-//        cant-afford jump-false
-
-//        *_0 1 add-items
-//        >"You buy "
-//        *_0 say
-//        >"."
-//        end
-
-//        LABEL cant-afford
-//        >"You can't afford that!"
+        (doStoreList self "\"What would you like?\"")
     }
 ;

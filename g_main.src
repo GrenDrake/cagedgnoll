@@ -196,6 +196,51 @@ asm_function itemQty(item : invMap) {
 }
 
 
+// ////////////////////////////////////////////////////////////////////////////
+// Generic store functions
+// ////////////////////////////////////////////////////////////////////////////
+
+function doStoreList(storeObject promptStr : storeList listSize item index optText) {
+    (print promptStr "\n")
+
+    (store storeList (get_prop storeObject $saleList))
+    (store listSize (get_size storeList))
+    (store index 0)
+    (while (lt index listSize)
+        (proc
+            (store item (get_item storeList index))
+            (say_uf (get_prop item $name))
+            (" is " (get_prop item $price) " gold pieces[br]")
+            (if (lte (get_prop item $price) (itemQty gold))
+                (proc
+                    (store optText (new String))
+                    (strcpy optText "Buy ")
+                    (strcat optText (get_prop item $name))
+                    (set_prop storeBuyEvent $returnEvent storeObject)
+                    (add_option_x item storeBuyEvent optText)))
+            (store index (add index 1))))
+
+    (store index (itemQty gold))
+    (if (lte index 0) ("\nYou are currently broke.")
+        (if (eq index 1)
+            ("\nYou have a single gold piece.")
+            ("\nYou have " (itemQty gold) " gold pieces.")))
+
+    (add_option (get_prop world $location) "Buy nothing")
+}
+object storeBuyEvent
+    body function(item) {
+        (add_option (get_prop self $returnEvent) continueStr)
+        (if (removeItems gold (get_prop item $price))
+            (proc
+                (addItems item 1)
+                ("You buy ")
+                (sayA item)
+                ("."))
+            ("You can't afford it."))
+    }
+;
+
 
 // ////////////////////////////////////////////////////////////////////////////
 // Startup and chargen
