@@ -258,7 +258,7 @@ asm_function pageInventory(: list keys itemCount counter) {
     keys get_size *itemCount store
     0 *counter store
     loopStart:
-    counter itemCount gte done jnz
+    counter itemCount lte done jnz
     counter 1 add say
     ") " say
     counter keys get_item 1 sayName call
