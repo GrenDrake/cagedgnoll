@@ -270,10 +270,10 @@ object townBlacksmithStore
                 (store index (add index 1))))
 
         (store index (itemQty gold))
-        (if (lte index 0) ("\nYou are current broke."))
-        (if (eq index 1)
-            ("\nYou have a single gold piece.")
-            ("\nYou have " (itemQty gold) " gold pieces."))
+        (if (lte index 0) ("\nYou are currently broke.")
+            (if (eq index 1)
+                ("\nYou have a single gold piece.")
+                ("\nYou have " (itemQty gold) " gold pieces.")))
 
         (add_option (get_prop world $location) "Buy nothing")
     }
