@@ -183,7 +183,10 @@ asm_function addItems(item qty : invMap) {
 asm_function removeItems(item qty : invMap) {
     qty item 1 itemQty call stack_dup qty gt notEnough jnz
     $inventory thePlayer get_prop *invMap store
-    sub item invMap set_item 1 return
+    sub item invMap set_item
+    item invMap get_item alldone jnz
+    item invMap del_item
+    alldone: 1 return
     notEnough: 0 return
 }
 
