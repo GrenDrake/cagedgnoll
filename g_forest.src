@@ -83,38 +83,38 @@ object enemyEkeleton
 
 object forestPath
     location "On Forest Path"
-    body asm_function() {
-        "You are on a path leading through a forest. The crumbling remains of a stone wall can be seen on one side, the words \"TOWN\" and a southward arrow has been painted on the wall. The wall partially hides an overgrown side trail." say
-        "Go north into the forest" forestFork  add_option
-        "Go south to town"         townGate    add_option
-        "Take the overgrown trail" gnollCage   add_option
-        "Rest Awhile"              restAwhile  add_option
+    body function() {
+        ("You are on a path leading through a forest. The crumbling remains of a stone wall can be seen on one side, the words \"TOWN\" and a southward arrow has been painted on the wall. The wall partially hides an overgrown side trail.")
+        (option "Go north into the forest" forestFork)
+        (option "Go south to town"         townGate)
+        (option "Take the overgrown trail" gnollCage)
+        (option "Rest Awhile"              restAwhile)
     }
 ;
 
 object townGate
     location "Outside the Town Gates"
-    body asm_function() {
-        "You stand before a gate built into the large, wooden pallisade that surronds the town. The gate is open, ready to admit you to the market bzzaar within." say
-        "Head into town" inTown add_option
-        "Return to the forest" forestPath add_option
+    body function() {
+        ("You stand before a gate built into the large, wooden pallisade that surronds the town. The gate is open, ready to admit you to the market bzzaar within.")
+        (option "Head into town" inTown)
+        (option "Return to the forest" forestPath)
     }
 ;
 
 object gnollCage
     location "By a Cage in the Forest"
-    body asm_function() {
-        "You stand in a clearing in the forest. The area is dominated by a large, if rusty, cage." say
-        "Return to the forest path" forestPath add_option
+    body function() {
+        ("You stand in a clearing in the forest. The area is dominated by a large, if rusty, cage.")
+        (option "Return to the forest path" forestPath)
 
-        $rescued theGnoll get_prop nognoll jnz
-        " Inside the cage you can see a rather emaciated gnoll." say
-        "Open the cage" openCage add_option
-        "Try to talk to the gnoll" talkToCagedGnoll add_option
-        return
+        (if (get theGnoll $rescued)
+            (proc
+                (" The cage stands empty and open.")
+                (return none)))
 
-        nognoll:
-        " The cage stands empty and open." say
+        (" Inside the cage you can see a rather emaciated gnoll.")
+        (option "Open the cage" openCage)
+        (option "Try to talk to the gnoll" talkToCagedGnoll)
     }
 ;
 
@@ -122,12 +122,12 @@ object talkToCagedGnoll
     body asm_function() {
         0 addContinue call
 
-        $talkedToInCage theGnoll get_prop nottalked jz
+        $talkedToInCage theGnoll get nottalked jz
         "The gnoll continues to plead for help in a barely audible voice. \"The imps...\"" say
         return
 
         nottalked:
-        1 $talkedToInCage theGnoll set_prop
+        1 $talkedToInCage theGnoll setp
         "You can barely make out the gnoll's words; \"Help me, please! The imps, they have the key.\"" say
     }
 ;
@@ -136,11 +136,11 @@ object openCage
     body asm_function() {
         0 addContinue call
 
-        $defeated imp1 get_prop nokey jz
+        $defeated imp1 get nokey jz
         // gnoll-cage-key item-qty no-key jump-false
         "Using the key you found you are able to open the cage; as you do, both the key and the lock turn to ash. As you open the door, the gnoll rushes out surprisingly fast given his state.\n\n\"Thank you!\" he says. \"Please, come see me in my home. I live to the north of the town.\"" say
         // gnoll-cage-key 1 remove-items
-        1 $rescued theGnoll set_prop
+        1 $rescued theGnoll setp
         return
 
         nokey:
@@ -150,26 +150,25 @@ object openCage
 
 object forestFork
     location "A Fork in the Path"
-    body asm_function() {
-        "The forest path branches here. One fork leads northward, a faded sign labelling it as \"GNOLL HOME\". A northeast fork deeper into the forest, suitable for exploring what hides in the forest's shadowed reaches. To the south, the path leads back towards town. A western trail loop arounds to a discreet clearing hidden by dense brush." say
+    body function() {
+        ("The forest path branches here. One fork leads northward, a faded sign labelling it as \"GNOLL HOME\". A northeast fork deeper into the forest, suitable for exploring what hides in the forest's shadowed reaches. To the south, the path leads back towards town. A western trail loop arounds to a discreet clearing hidden by dense brush.")
 
-        "Take the north path"           outsideCabin       add_option
-        "Explore the forest"            forestEvent        add_option
-        "Check the discreet clearing"   discreetClearing   add_option
-        "Return to the south"           forestPath         add_option
+        (option "Take the north path"           outsideCabin)
+        (option "Explore the forest"            forestEvent)
+        (option "Check the discreet clearing"   discreetClearing)
+        (option "Return to the south"           forestPath)
     }
 ;
 
 object outsideCabin
     location "A Cabin in the Forest"
-    body asm_function() {
-        "A small cabin has been built here, nestled between the trees." say
+    body function() {
+        ("A small cabin has been built here, nestled between the trees.")
 
-        $rescued theGnoll get_prop nognoll jnz
-        " A trail of smoke can be seen curling up from the chimney; it appears someone is home!" say
-        nognoll:
-        "Re-eneter the forest" forestFork add_option
-        "Try to enter the cabin." enteringCabin add_option
+        (if (get theGnoll $rescued)
+            (" A trail of smoke can be seen curling up from the chimney; it appears someone is home!"))
+        (option "Re-eneter the forest" forestFork)
+        (option "Try to enter the cabin." enteringCabin)
     }
 ;
 
@@ -181,13 +180,13 @@ object outsideCabin
 object discreetClearing
     location "A Discreet Clearing"
     body asm_function() {
-        $defeated imp1 get_prop impsdone jnz
+        $defeated imp1 get impsdone jnz
         "Three imps are gathered around a campfire, cackling and conversing. As you enter the clearing, they look up at you.\n\"An intruder! Get him!\"" say
         "\n[rng: " say 2 0 random stack_dup say "] " say
         fakewon jz
 
         "The sheer violence of the imps drives you back out of the clearing." say
-        continueStr forestFork add_option
+        continueStr forestFork none none add_option
         return
 
         fakewon:
@@ -200,7 +199,7 @@ object discreetClearing
 
         impsdone:
         "This is a quiet clearing screen from view from the path by the brush. The remains of a campfire are visible in the centre. No one else is here; the only thing you can do is leave." say
-        "Leave the clearing" forestFork add_option
+        "Leave the clearing" forestFork none none add_option
     }
 ;
 
@@ -209,7 +208,7 @@ object mainImpFightAfter
 //        combat-status 0 player-defeat jump-lt
 
         // VICTORY
-        1 $defeated imp1 set_prop
+        1 $defeated imp1 setp
         "The imps lie unconscious around you, defeated. Scattered around the area, you find 200 gold and a large key.\n" say
 //        gold 200 add-items
 //        gnoll-cage-key 1 add-items
@@ -230,14 +229,14 @@ object mainImpFightAfter
 
 object enteringCabin
     body asm_function() {
-        $rescued theGnoll get_prop gnollhome jnz
+        $rescued theGnoll get gnollhome jnz
 
         "Try as you might, the door is quite secure." say
         0 addContinue call
         return
 
         gnollhome:
-        1 $visited theGnoll set_prop
+        1 $visited theGnoll setp
         "You hear the voice of the gnoll call out from inside. \"Come on in!\"\n" say
         insideCabin
     }
@@ -245,10 +244,10 @@ object enteringCabin
 
 object insideCabin
     location "Inside the Gnoll's Cabin"
-    body asm_function() {
-        "The interior of the cabin is crampt, but cozy. You can see the gnoll slotched back on a wooden chair, a mug of some dark liquid in his hand.\n\n\"Good to see you again, my rescuer!\" he says as you enter." say
-        "Talk to the gnoll" gnollCabinTalk     add_option
-        "Leave"             outsideCabin       add_option
+    body function() {
+        ("The interior of the cabin is crampt, but cozy. You can see the gnoll slotched back on a wooden chair, a mug of some dark liquid in his hand.\n\n\"Good to see you again, my rescuer!\" he says as you enter.")
+        (option "Talk to the gnoll" gnollCabinTalk)
+        (option "Leave"             outsideCabin)
     }
 ;
 
@@ -270,7 +269,7 @@ object forestEvent
         forestEventNothing
     ]
     body asm_function() {
-        $events self get_prop get_random
+        $events self get get_random
     }
 ;
 

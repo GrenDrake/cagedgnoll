@@ -121,10 +121,10 @@ object inTown
     location "In Town"
     body asm_function() {
         "You are inside the bazaar of the town; colourful stalls surround you and the sound of voices fills the air. The gate out of town is to the north while several stalls may be of interest. Particularly, there is a large tent with a sign reading \"Al the Alchemist Extraordinaire!\". Across the way from that is a strength-testing machine. Slightly further away, a blacksmith has set up their forge." say
-        "Visit alchemist's tent"    townAlchemist          add_option
-        "Visit the blacksmith"      townBlacksmith         add_option
-        "Test your strength"        townStrengthTester     add_option
-        "Leave town"                townGate               add_option
+        "Visit alchemist's tent"    townAlchemist          none none add_option
+        "Visit the blacksmith"      townBlacksmith         none none add_option
+        "Test your strength"        townStrengthTester     none none add_option
+        "Leave town"                townGate               none none add_option
     }
 ;
 
@@ -133,8 +133,8 @@ object townStrengthTester
     //  checks
     body function(: actor) {
         (addContinue)
-        (store actor thePlayer)
-        (say_uf (get_prop actor $name))
+        (set actor thePlayer)
+        (say_uf (get actor $name))
         (" picks up the hammer sitting next to the strength testing machine and slams it down on the target as hard ")
         (sayPronoun actor proSubject)
         (" can! ")
@@ -154,8 +154,8 @@ object townAlchemist
     location "Al the Alchemist Extraordinaire's Tent"
     body asm_function() {
         "You stand in an elaborately decorated tent with all manner of alchemical decor, such as bubbling flasks and vials of strangely coloured liquids, swatches of brightly coloured cloth, and cases of books with incomprehensible titles. An older man with an erect bearing beams at you from beside a counter." say
-        "Buy something" townAlchemistTalk add_option
-        "Leave the tent" inTown add_option
+        "Buy something" townAlchemistTalk none none add_option
+        "Leave the tent" inTown none none add_option
     }
 ;
 
@@ -182,24 +182,24 @@ object townBlacksmith
     location "The Town Blacksmith"
     body asm_function() {
         "The blacksmith is located in a simple, but well built and maintained forge. The blacksmith, a large, heavily muscled human, works tirelessly." say
-        "Buy something" townBlacksmithStore add_option
-        "Talk to the blacksmith" townBlacksmithTalk add_option
-        "Leave the tent" inTown add_option
+        "Buy something" townBlacksmithStore none none add_option
+        "Talk to the blacksmith" townBlacksmithTalk none none add_option
+        "Leave the tent" inTown none none add_option
     }
 ;
 
 object townBlacksmithTalk
     body asm_function() {
-        "\"Welcome, " say $name $species thePlayer get_prop get_prop say "! How may I help you?\"" say
-        "Ask about the town" townBlacksmithAboutTown add_option
-        "Finish talking" $location world get_prop add_option
+        "\"Welcome, " say $name $species thePlayer get get say "! How may I help you?\"" say
+        "Ask about the town" townBlacksmithAboutTown none none add_option
+        "Finish talking" $location world get none none add_option
     }
 ;
 
 object townBlacksmithAboutTown
     body asm_function() {
         "You ask the blacksmith about the town.\n\"I admit, it's not large, but it's what you can find here that counts and you won't find any town with as many shops at this one anywhere in this world!\"" say
-        continueStr townBlacksmithTalk add_option
+        continueStr townBlacksmithTalk none none add_option
     }
 ;
 
