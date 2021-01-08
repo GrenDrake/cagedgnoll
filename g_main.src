@@ -2,73 +2,79 @@
 // Core and general game systems
 // ////////////////////////////////////////////////////////////////////////////
 
+declare TITLE   "The Caged Gnoll";
+declare AUTHOR  "Gren Drake";
+declare VERSION 1;
+declare GAMEID  "6F7FAAA5-956D-4DF4-906C-F8F111B7B2A8";
+
 // ////////////////////////////////////////////////////////////////////////////
 // Constant definitions
 // ////////////////////////////////////////////////////////////////////////////
 
-declare proSubject    0
-declare proObject     1
-declare proPos        2
-declare proAdject     3
-declare proReflex     4
+declare proSubject    0;
+declare proObject     1;
+declare proPos        2;
+declare proAdject     3;
+declare proReflex     4;
 
-declare skillMelee    0
-declare skillRanged   1
-declare skillMagic    2
+declare skillMelee    0;
+declare skillRanged   1;
+declare skillMagic    2;
 
-declare dtBlunt       "blunt"
-declare dtCutting     "cutting"
-declare dtPiercing    "piercing"
-declare dtFire        "fire"
-declare dtAir         "air"
-declare dtEarth       "earth"
-declare dtWater       "water"
+declare dtBlunt       "blunt";
+declare dtCutting     "cutting";
+declare dtPiercing    "piercing";
+declare dtFire        "fire";
+declare dtAir         "air";
+declare dtEarth       "earth";
+declare dtWater       "water";
 
 // ////////////////////////////////////////////////////////////////////////////
 // Common strings
 // ////////////////////////////////////////////////////////////////////////////
 
-declare hoursPerDay       1440
-declare minutesPerHour    60
-declare continueStr       "Continue"
+declare hoursPerDay       24;
+declare minutesPerHour    60;
+declare minutesPerDay     1440;
+declare continueStr       "Continue";
 
 object sexNeuter
-    article             "a "
-    name                "neuter"
-    pronouns            [ "it" "it" "its" "its" "itself" ]
+    $article            "a "
+    $name               "neuter"
+    $pronouns           [ "it" "it" "its" "its" "itself" ]
 ;
 object sexMale
-    article             "a "
-    name                "male"
-    pronouns            [ "he" "him" "his" "his" "himself" ]
+    $article            "a "
+    $name               "male"
+    $pronouns           [ "he" "him" "his" "his" "himself" ]
 ;
 object sexFemale
-    article             "a "
-    name                "female"
-    pronouns            [ "she" "her" "her" "hers" "herself" ]
+    $article            "a "
+    $name               "female"
+    $pronouns           [ "she" "her" "her" "hers" "herself" ]
 ;
 
 object speciesHuman
-    article             "a "
-    name                "human"
+    $article            "a "
+    $name               "human"
 ;
 object speciesGnoll
-    article             "a "
-    name                "gnoll"
+    $article            "a "
+    $name               "gnoll"
 ;
 object speciesDragon
-    article             "a "
-    name                "dragon"
+    $article            "a "
+    $name               "dragon"
 ;
 
 object thePlayer
-    article             "the "
-    name                "player"
-    sex                 sexNeuter
-    species             speciesHuman
-    faction             0
-    inventory           {}
-    skills {
+    $article            "the "
+    $name               "player"
+    $sex                sexNeuter
+    $species            speciesHuman
+    $faction            0
+    $inventory          {}
+    $skills {
         skillMelee:     10
         skillRanged:    12
         skillMagic:     8
@@ -76,11 +82,11 @@ object thePlayer
 ;
 
 object world
-    time                720 // start game at noon
-    location            0
-    locationName        0
-    inLocation          0
-    newLocation         0
+    $time               720 // start game at noon
+    $location           start
+    $locationName       0
+    $inLocation         0
+    $newLocation        0
 ;
 
 
@@ -92,63 +98,97 @@ function addContinue() {
     (option continueStr (get world $location))
 }
 
-function dispatch(event extra : result) {
-    (if (neq (typeof event) Object)
-        (set event (get world $location)))
-    (while 1
-        (proc
-            (set result ((get event $body) extra))
-            (if (neq (typeof result) Object) (break))
-            (set event result)
-            (set extra 0)))
+function dispatch() {
+    [ result event extra ]
+    (set event 0)
 
-    (setp world $inLocation false)
-    (setp world $newLocation false)
+    (while 1 (proc
+        (if (neq (typeof event) Object)
+            (set event (get world $location)))
+        (while 1
+            (proc
+                (set result ((get event $body) extra))
+                (if (neq (typeof result) Object) (break))
+                (set event result)
+                (set extra 0)))
 
-    (set result (get event $location))
-    (if (neq result 0)
-        (proc
-            (setp world $inLocation true)
-            (if (neq event (get world $location))
-                (proc
-                    (setp world $newLocation true)
-                    (setp world $location event)
-                    (setp world $locationName result)
-                    (set_setting infobarLeft result)))))
+        (setp world $inLocation false)
+        (setp world $newLocation false)
 
-//    "\nIN LOCATION: " say $inLocation world get say
-//    "\nNEW LOCATION: " say $newLocation world get say
-//    "\nLOCATION NAME: " say $locationName world get say
-    (get_option dispatch)
+        (set result (get event $location))
+        (if (neq result 0)
+            (proc
+                (option "Character" handleChar none 'c')
+                (option "Inventory" handleInv none 'i')
+                (setp world $inLocation true)
+                (if (neq event (get world $location))
+                    (proc
+                        (setp world $newLocation true)
+                        (setp world $location event)
+                        (setp world $locationName result)
+                        (set_setting infobarLeft result)))))
+
+        (if (or (not (get world $inLocation)) (get world $newLocation))
+            (proc
+                (setp world $time (add (get world $time) 55))))
+        (set_setting infobarRight (getTimeString))
+
+    //    "\nIN LOCATION: " say $inLocation world get say
+    //    "\nNEW LOCATION: " say $newLocation world get say
+    //    "\nLOCATION NAME: " say $locationName world get say
+        (set event (get_option extra)))
 }
 
-asm_function main() {
-    "Caged Gnoll" infobarTitle set_setting
-    start 1 dispatch call
+function getTimeString() {
+    [ dayNumber minuteOfDay theHour theMinute timeStr]
+    (set dayNumber (add (div (get world $time) minutesPerDay) 1))
+    (set minuteOfDay (mod (get world $time) minutesPerDay))
+    (set theHour (div minuteOfDay minutesPerHour))
+    (set theMinute (mod minuteOfDay minutesPerHour))
+    (set timeStr (string "Day " dayNumber " @ " theHour ":"))
+    (if (lt theMinute 10) (str_append timeStr "0"))
+    (str_append timeStr theMinute)
+    (return timeStr)
+}
+
+function handleRest(length) {
+    (setp world $time (add (get world $time) length))
+    ("You rest for " length " minutes.")
+}
+
+function main() {
+    (set_setting infobarTitle "Caged Gnoll")
+    (dispatch)
 }
 
 
-asm_function sayA(theObject upperFirst) {
-    $article theObject get say
-    $name theObject get say
+function sayA(theObject upperFirst) {
+    (if upperFirst
+        (print_uf (get theObject $article) (get theObject $name))
+        (print (get theObject $article) (get theObject $name)))
 }
-asm_function sayThe(theObject upperFirst) {
-    "the " say
-    $name theObject get say
+function sayThe(theObject upperFirst) {
+    (if upperFirst
+        (print "The " (get theObject $name))
+        (print "the " (get theObject $name)))
 }
-asm_function sayName(theObject upperFirst) {
-    $name theObject get say
+function sayName(theObject upperFirst) {
+    (if upperFirst
+        (print_uf (get theObject $name))
+        (print (get theObject $name)))
 }
-asm_function sayPronoun(who thePronoun upperFirst) {
-    thePronoun $pronouns $sex who get get get
-    upperFirst asUpper jnz say return asUpper: say_uf
+function sayPronoun(who thePronoun upperFirst) {
+    (asm
+        thePronoun $pronouns $sex who get get get
+        upperFirst asUpper jnz say ret asUpper: say_uf)
 }
 
-function skillCheck(who skill modifier : roll total) {
+function skillCheck(who skill modifier) {
+    [ roll total ]
     (if (eq (typeof modifier) None)
         (set modifier 0))
     (set skill (get (get who $skills) skill))
-    ("[(" skill "+" modifier ")=" (add skill modifier) " vs (")
+    ("{(" skill "+" modifier ")=" (add skill modifier) " vs (")
 
     (set roll (random 1 7))   (print roll "+")    (set total roll)
     (set roll (random 1 7))   (print roll "+")    (set total (add total roll))
@@ -157,10 +197,10 @@ function skillCheck(who skill modifier : roll total) {
 
     (if (gte (add skill modifier) total)
         (proc
-            (" = success]")
+            (" = success}")
             (return 1))
         (proc
-            (" = fail]"
+            (" = fail}"
             (return 0))))
 }
 
@@ -169,30 +209,36 @@ function skillCheck(who skill modifier : roll total) {
 // Inventory functions
 // ////////////////////////////////////////////////////////////////////////////
 
-asm_function addItems(item qty : invMap) {
-    $inventory thePlayer get *invMap set
-    item invMap has alreadyHas jnz
-    qty item invMap setp
-    1 return
+function addItems(item qty) {
+    [ invMap ]
+    (asm
+        $inventory thePlayer get *invMap set
+        item invMap has alreadyHas jnz
+        qty item invMap setp
+        1 ret
 
-    alreadyHas:
-    item invMap get qty add item invMap setp
-    1 return
+        alreadyHas:
+        item invMap get qty add item invMap setp
+        1 ret)
 }
 
-asm_function removeItems(item qty : invMap) {
-    qty item 1 itemQty call stack_dup qty gt notEnough jnz
-    $inventory thePlayer get *invMap set
-    sub item invMap setp
-    item invMap get alldone jnz
-    item invMap del
-    alldone: 1 return
-    notEnough: 0 return
+function removeItems(item qty) {
+    [ invMap ]
+    (asm
+        qty item 1 itemQty call stack_dup qty gt notEnough jnz
+        $inventory thePlayer get *invMap set
+        sub item invMap setp
+        item invMap get alldone jnz
+        item invMap del
+        alldone: 1 ret
+        notEnough: 0 ret)
 }
 
-asm_function itemQty(item : invMap) {
-    $inventory thePlayer get *invMap set
-    item invMap get return
+function itemQty(item) {
+    [ invMap ]
+    (asm
+        $inventory thePlayer get *invMap set
+        item invMap get ret)
 }
 
 
@@ -200,7 +246,9 @@ asm_function itemQty(item : invMap) {
 // Generic store functions
 // ////////////////////////////////////////////////////////////////////////////
 
-function doStoreList(storeObject promptStr : storeList listSize item index optText) {
+function doStoreList(storeObject promptStr) {
+    [ storeList listSize item index optText ]
+
     (print promptStr "\n")
 
     (set storeList (get storeObject $saleList))
@@ -214,8 +262,8 @@ function doStoreList(storeObject promptStr : storeList listSize item index optTe
             (if (lte (get item $price) (itemQty gold))
                 (proc
                     (set optText (new String))
-                    (strcat optText "Buy ")
-                    (strcat optText (get item $name))
+                    (str_append optText "Buy ")
+                    (str_append optText (get item $name))
                     (setp storeBuyEvent $returnEvent storeObject)
                     (option optText storeBuyEvent item)))
             (set index (add index 1))))
@@ -228,8 +276,9 @@ function doStoreList(storeObject promptStr : storeList listSize item index optTe
 
     (option "Buy nothing" (get world $location))
 }
+
 object storeBuyEvent
-    body function(item) {
+    $body function(item) {
         (option continueStr (get self $returnEvent))
         (if (removeItems gold (get item $price))
             (proc
@@ -247,21 +296,21 @@ object storeBuyEvent
 // ////////////////////////////////////////////////////////////////////////////
 
 object start
-    body function() {
+    $body function() {
         ("Welcome to game!\nYou can select options by clicking on them or (for options up to ten) by pressing the appropriate number key.")
         (option "Start game" chargen1)
     }
 ;
 
 object chargen1
-    body function() {
+    $body function() {
         ("What sex are you?")
         (option "Male"   chargen2   sexMale)
         (option "Female" chargen2   sexFemale)
     }
 ;
 object chargen2
-    body function(choice) {
+    $body function(choice) {
         (setp thePlayer $sex choice)
 
         ("What species are you?")
@@ -271,16 +320,19 @@ object chargen2
     }
 ;
 object chargen3
-    body asm_function(choice) {
-        choice $species thePlayer setp
+    $body function(choice) {
+        (asm
+            choice $species thePlayer setp
 
-        50 gold 2 addItems call
-        1 loincloth 2 addItems call
+            50 gold 2 addItems call
+            1 loincloth 2 addItems call
+            5 teleportCrystal 2 addItems call
+            5 gnollCageKey 2 addItems call
 
-        "Character" pageCharacter 99 add_page
-        "Inventory" pageInventory 105 add_page
+//            "Character" pageCharacter 99 add_page
+//            "Inventory" pageInventory 105 add_page
 
-        forestPath
+            forestPath ret)
     }
 ;
 
@@ -289,63 +341,75 @@ object chargen3
 // Page handlers
 // ////////////////////////////////////////////////////////////////////////////
 
-function pageCharacter() {
-    (print "You are ")
-    (sayA (get thePlayer $sex))
-    (print " " (get (get thePlayer $species) $name)
-           ".")
+object handleChar
+    $body function() {
+        ("You are ")
+        (sayA (get thePlayer $sex))
+        (" " (get (get thePlayer $species) $name) ".")
+        (addContinue)
+    }
+;
 
-    (option continueStr pageDone)
-    (get_option pageDispatch)
-}
+object handleInv
+    $body function() {
+        [ aList keys itemCount counter curItem text ]
 
-asm_function pageInventory(: list keys itemCount counter) {
-    $inventory thePlayer get *list set
-    list get_keys *keys set
-    keys size *itemCount set
-    0 *counter set
-    loopStart:
-    counter itemCount lte done jnz
-    counter 1 add say
-    ") " say
-    counter keys get 1 sayName call
-    " (x" say
-    counter keys get list get say
-    ")[br]" say
-    counter 1 add *counter set
-    loopStart jmp
+        (set aList (get thePlayer $inventory))
+        (set keys (get_keys aList))
+        (set itemCount (size keys))
+        (set counter 0)
 
-    done:
+        ("You are carrying:[br]")
+        (while (lt counter itemCount)
+            (proc
+                (set curItem (get keys counter))
+                (if (has curItem $onUse)
+                    (proc
+                        (set text (string "Use " (get curItem $name)))
+                        (option text handleUse curItem)))
+                (if (has curItem $slot)
+                    (proc
+                        (set text (string "Equip " (get curItem $name)))
+                        (option text handleEquip curItem)))
+                ("- ")
+                (sayName curItem)
+                (" (x" (get aList curItem) ")[br]")
+                (inc counter)))
 
-    continueStr pageDone none none add_option
-    pageDispatch get_option
-}
+        (option "Return")
+    }
+;
 
-asm_function pageDispatch(event extra : result) {
-    extra 1 event call
-    *result set
-}
+object handleEquip
+    $body function(theItem) {
+        ("not implemented.")
+        (addContinue)
+    }
+;
 
-asm_function pageDone() {
-    end_page
-}
+object handleUse
+    $body function(theItem) {
+        ((get theItem $onUse))
+    }
+;
+
 
 // ////////////////////////////////////////////////////////////////////////////
 // General item definitions
 // ////////////////////////////////////////////////////////////////////////////
 
 object gold
-    article     "a "
-    name        "gold piece"
-    plural      "gold pieces"
-    description "The coin of the realm."
+    $article        "a "
+    $name           "gold piece"
+    $plural         "gold pieces"
+    $description    "The coin of the realm."
 ;
 
 object loincloth
-    article     "a "
-    name        "loincloth"
-    plural      "loincloths"
-    slot        "body"
+    $article        "a "
+    $name           "loincloth"
+    $plural         "loincloths"
+    $slot           "body"
 ;
 
 
@@ -354,20 +418,22 @@ object loincloth
 // ////////////////////////////////////////////////////////////////////////////
 
 object restAwhile
-    body asm_function() {
-        "How long would you like to rest for?" say
-        "One hour"      restAwhileDoit    60  none add_option
-        "Six hours"     restAwhileDoit    360 none add_option
-        "Twelve hours"  restAwhileDoit    720 none add_option
-        "Don't rest" $location world get  none none add_option
+    $body function() {
+        (asm
+            "How long would you like to rest for?" say
+            "One hour"      restAwhileDoit    60  none add_option
+            "Six hours"     restAwhileDoit    360 none add_option
+            "Twelve hours"  restAwhileDoit    720 none add_option
+            "Don't rest" $location world get  none none add_option
+        )
     }
 ;
 
 object restAwhileDoit
-    body asm_function(length) {
-        "You rest for a while. " say
-//        length do_rest
-        0 addContinue call
+    $body function(length) {
+        ("You rest for a while. ")
+        (handleRest length)
+        (addContinue)
     }
 ;
 

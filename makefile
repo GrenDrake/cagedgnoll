@@ -1,8 +1,8 @@
 SRCS=g_main.src g_forest.src g_town.src
-BUILD= ../gtrpge-build/build
+BUILD= ../quollvm/build
 
-game.bin: $(BUILD) $(SRCS)
+game.qvm: $(BUILD) $(SRCS)
 	$(BUILD) $(SRCS) -data
-	cp game.bin ../gtrpge-javascript/
+	# cp game.bin ../gtrpge-javascript/
 
 .PHONY: clean
