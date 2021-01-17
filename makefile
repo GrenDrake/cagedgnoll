@@ -3,6 +3,6 @@ BUILD= ../quollvm/build
 
 game.qvm: $(BUILD) $(SRCS)
 	$(BUILD) $(SRCS) -data
-	# cp game.bin ../gtrpge-javascript/
+	cp game.qvm ../playquoll/
 
 .PHONY: clean
