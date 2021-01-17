@@ -327,10 +327,6 @@ object chargen3
             50 gold 2 addItems call
             1 loincloth 2 addItems call
             5 teleportCrystal 2 addItems call
-            5 gnollCageKey 2 addItems call
-
-//            "Character" pageCharacter 99 add_page
-//            "Inventory" pageInventory 105 add_page
 
             forestPath ret)
     }
